@@ -1,0 +1,131 @@
+%% Exercise 3.3: NMPC for mass-spring-damper
+
+clear X U Xopt Uopt TX TU;
+example_name = 'simpleNLcar_MPC_simul';
+
+% Define the model parameters:
+MParam.beta = 0.1;
+MParam.m = 1;
+MParam.Ts = 0.1;
+MParam.alpha = 0.4;
+MParam.k = 0.005;
+% define the cost parameters
+N = 5;
+Q = diag([10,0.1]);
+P = 1*Q;
+R = 0.1;
+x0 = [-1;1];
+u0 = 0;
+nx = size(x0,1);
+nu = size(u0,2);
+
+% compute the cost batch matrices
+[~,~,Qb,Rb] = GetBatchXMatrices(zeros(nx),zeros(nx,nu),[],N,P,Q,R);
+
+%simulate controlled system:
+nk = 60;
+TU = 1:nk;
+TX = 1:nk+1;
+X = kron(x0,ones(1,nk+1));
+U = kron(u0,ones(1,nk));
+Xopt(:,:,1) = X(:,1:N+1);
+Uopt(:,:,1) = U(:,1:N);
+for k = 1:nk
+    TUopt(k,:) = k:k+N-1;
+    TXopt(k,:) = k:k+N;
+    
+    % inicialize optimization problem based on previous solution:
+    xk = X(:,k);
+    Xopt(:,1,k) = xk;
+    X0 = reshape( Xopt(:,:,k) , [],1);
+    U0 = reshape( Uopt(:,:,k) , [],1);
+    XU0 = [X0;U0];
+    
+    % define model constraint and cost function handlers:
+    fun = @(XU)	cost(XU,Qb,Rb);
+    nonlcon = @(XU)	statecon(XU,xk,N,nx,nu,MParam);
+    [XUopt,Jo,exitflag,output] = fmincon(fun,XU0,[],[],[],[],[],[],nonlcon);
+    if exitflag~=1
+        error('Problems in the Optimization problem.');
+    end
+    Xopt(:,:,k) = reshape( XUopt(1 : nx*(N+1))               , nx,[]);
+    Uopt(:,:,k) = reshape( XUopt(nx*(N+1)+1:nx*(N+1)+nu*N)   , nu,[]);
+    
+    % get MPC policy and simulate the nonlinear system:
+    U(:,k) = Uopt(:,1,k);
+    X(:,k+1) = f_car(X(:,k),U(:,k),MParam);
+    
+    % next initialization
+    Xopt(:,1:N,k+1) = Xopt(:,2:N+1,k);
+    Xopt(:,N+1,k+1) = Xopt(:,N+1,k);
+    Uopt(:,1:N-1,k+1) = Uopt(:,2:N,k);
+    Uopt(:,N,k+1)   = Uopt(:,N,k);
+    
+end
+
+figure(5201);
+plot(X(1,:),X(2,:),'s-','Color',sstblue);
+grid on;
+hold on;
+for k = 1:nk
+    plot(Xopt(1,:,k),Xopt(2,:,k),'.--','Color',sstlightblue);
+end
+plot(X(1,:),X(2,:),'s-','Color',sstblue);
+hold off;
+xlabel('x_1');
+ylabel('x_2');
+legend('const.','pred.');
+title('Phase plot');
+
+figure(5202);
+plot(TX,X(1,:),'s-','Color',sstblue);
+grid on;
+hold on;
+plot(TX,X(2,:),'d-','Color',sstgreen);
+for k = 1:nk
+    plot(TXopt(k,:),Xopt(1,:,k),'.--','Color',sstlightblue);
+    plot(TXopt(k,:),Xopt(2,:,k),'.-.','Color',sstlightgreen);
+end
+plot(TX,X(1,:),'s-','Color',sstblue);
+plot(TX,X(2,:),'d-','Color',sstgreen);
+hold off;
+xlabel('k');
+ylabel('x(k)');
+title('State evolution');
+legend('x_1 const.','x_2 const.','x_1 pred.','x_2 pred.');
+
+figure(5203);
+plot(TU,U,'s-','Color',sstblue);
+grid on;
+hold on;
+for k = 1:nk
+    plot(TUopt(k,:),Uopt(:,:,k),'.--','Color',sstlightblue);
+end
+plot(TU,U,'s-','Color',sstblue);
+hold off;
+xlabel('k');
+ylabel('u(k)');
+legend('const.','pred.');
+title('Input');
+
+% define cost function
+function J = cost(XU,Qb,Rb)
+    J = XU'*blkdiag(Qb,Rb)*XU;
+end
+
+% constraints for simple car:
+function [c,ceq] = statecon(XU,x0,N,nx,nu,MP)
+    X = reshape( XU(1 : nx*(N+1))               , nx,[]);
+    U = reshape( XU(nx*(N+1)+1:nx*(N+1)+nu*N)   , nu,[]);
+    Ceq = zeros(nx,N);
+    Ceq(:,1) = X(:,1) - x0;
+    for k = 1:N
+        Ceq(:,k+1) = f_car(X(:,k),U(:,k),MP) - X(:,k+1);
+    end
+    ceq = reshape(Ceq,[],1); c = [];
+end
+
+function xp = f_car(x,u,P)
+    xdot = [x(2);1/P.m*(u(1)-P.k*x(1)-P.beta*x(2)-P.alpha*x(2)^2)];
+    xp = x + P.Ts*xdot;
+end
