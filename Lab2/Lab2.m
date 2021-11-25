@@ -32,7 +32,18 @@ ve = 20;
 we = 0;
 T = 0.1;
 
-%%
+N = 20;
+Pi = 1;
+Qi = 1000;
+Ri = 0.001;
+
+nk = 500;
+TU = 1:nk;
+TX = 1:nk+1;
+Tref = 1:nk+N;
+ref = 10 * square(0.0002*Tref, 0.79);
+
+%% centralized
 Ac = [0 -1 0 0; 0 -(rho*area*Cd*ve)/m 0 0; 0 1 0 -1; 0 0 0 -(rho*area*Cd*ve)/m];
 Bc=[0 0; 1/m 0; 0 0; 0 1/m];
 C=[1 0 0 0; 0 0 1 0];
@@ -42,10 +53,7 @@ x10 = [1 0]';
 x20 = [1 0]';
 xd0 = [x10; x20];
 
-N = 20;
-Pi = 1;
-Qi = 1000;
-Ri = 0.001;
+
 
 
 % compute centralized tracking controller
@@ -62,15 +70,8 @@ Ky = Rt^-1*St;
 K = -Ky*Fb;
 
 
-nk = 500;
-TU = 1:nk;
-TX = 1:nk+1;
-Tref = 1:nk+N;
-%ref(1:length(Tref)) = -10*ones(); % step reference of amplitude 1
-%ref(351:length(Tref)) = -10*ones();
-ref = 10 * square(0.0002*Tref, 0.79);
-%ref = 10 * square(0.0033*Tref,7.5);
-%dist_x1 = 0*0.5*ones(size(ref)).*(Tref>=20);
+
+
 nu = size(B,2);
  x0 = [xd0*0 ; C*xd0];
  U = zeros(nu,nk);
@@ -82,7 +83,36 @@ Xd(:,2) = xd0;
 X(:,2) = x0;
 Y(:,2) = C*xd0;
 
+%% Decentralized
 
+A1c = [0 -1; 0 -(rho*area*Cd*ve)/m];
+A2c = [0 -1; 0 -(rho*area*Cd*ve)/m];
+B1c = [0; 1/m];
+B2c = [0; 1/m];
+C1 = [1 0];
+C2 = [1 0];
+A1 = eye(2) + A1c*T;
+A2 = eye(2) + A2c*T;
+B1 = B1c*T;
+B2 = B2c*T;
+
+[F1,G1,Qb1,Rb1,H1,Fd1,Gd1,Hd1] = GetBatchXiMatrices(A1,B1,C1,N,Pi,Qi,Ri);
+Gb1 = H1*G1;
+Fb1 = H1*F1;
+Rt1 = Gb1'*Qb1*Gb1 + Rb1;
+St1 = Gb1'*Qb1;
+Ky1 = Rt1^(-1)*St1;
+K1 = -Ky1*Fb1;
+
+[F2,G2,Qb2,Rb2,H2,Fd2,Gd2,Hd2] = GetBatchXiMatrices(A2,B2,C2,N,Pi,Qi,Ri);
+Gb2 = H2*G2;
+Fb2 = H2*F2;
+Rt2 = Gb2'*Qb2*Gb2 + Rb2;
+St2 = Gb2'*Qb2;
+Ky2 = Rt2^(-1)*St2;
+K2 = -Ky2*Fb2;
+
+%%
 
 for k = 2:nk
     
@@ -104,8 +134,6 @@ for k = 2:nk
     Y(:,k+1) = C*Xd(:,k+1);
 
     % compute auxiliary variables for visualization:
-
-
     
     TUopt(k,:) = k:k+N-1;
     TXopt(k,:) = k:k+N;
