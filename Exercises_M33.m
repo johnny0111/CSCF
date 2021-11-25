@@ -85,115 +85,8 @@ clear X U Xopt Uopt TX TU;
 example_name = 'simpleNLcar_MPC_simul';
 
 % Define the model parameters:
-MParam.beta = 0.5;
-MParam.m = 1;
-MParam.Ts = 0.1;
-
-% define the cost parameters
-N = 5;
-Q = diag([10,0.1]);
-P = 1*Q;
-R = 0.1;
-x0 = [1;1];
-u0 = 0;
-nx = size(x0,1);
-nu = size(u0,2);
-
-% compute the cost batch matrices
-[~,~,Qb,Rb] = GetBatchXMatrices(zeros(nx),zeros(nx,nu),[],N,P,Q,R);
-
-%simulate controlled system:
-nk = 60;
-TU = 1:nk;
-TX = 1:nk+1;
-X = kron(x0,ones(1,nk+1));
-U = kron(u0,ones(1,nk));
-Xopt(:,:,1) = X(:,1:N+1);
-Uopt(:,:,1) = U(:,1:N);
-for k = 1:nk
-    TUopt(k,:) = k:k+N-1;
-    TXopt(k,:) = k:k+N;
-    
-    % inicialize optimization problem based on previous solution:
-    xk = X(:,k);
-    Xopt(:,1,k) = xk;
-    X0 = reshape( Xopt(:,:,k) , [],1);
-    U0 = reshape( Uopt(:,:,k) , [],1);
-    XU0 = [X0;U0];
-    
-    % define model constraint and cost function handlers:
-    fun = @(XU)	cost(XU,Qb,Rb);
-    nonlcon = @(XU)	statecon(XU,xk,N,nx,nu,MParam);
-    [XUopt,Jo,exitflag,output] = fmincon(fun,XU0,[],[],[],[],[],[],nonlcon);
-    if exitflag~=1
-        error('Problems in the Optimization problem.');
-    end
-    Xopt(:,:,k) = reshape( XUopt(1 : nx*(N+1))               , nx,[]);
-    Uopt(:,:,k) = reshape( XUopt(nx*(N+1)+1:nx*(N+1)+nu*N)   , nu,[]);
-    
-    % get MPC policy and simulate the nonlinear system:
-    U(:,k) = Uopt(:,1,k);
-    X(:,k+1) = f_car(X(:,k),U(:,k),MParam);
-    
-    % next initialization
-    Xopt(:,1:N,k+1) = Xopt(:,2:N+1,k);
-    Xopt(:,N+1,k+1) = Xopt(:,N+1,k);
-    Uopt(:,1:N-1,k+1) = Uopt(:,2:N,k);
-    Uopt(:,N,k+1)   = Uopt(:,N,k);
-    
-end
-
-figure(5201);
-plot(X(1,:),X(2,:),'s-','Color',sstblue);
-grid on;
-hold on;
-for k = 1:nk
-    plot(Xopt(1,:,k),Xopt(2,:,k),'.--','Color',sstlightblue);
-end
-plot(X(1,:),X(2,:),'s-','Color',sstblue);
-hold off;
-xlabel('$$x_1$$');
-ylabel('$$x_2$$');
-legend('const.','pred.');
-title('Phase plot');
-
-figure(5202);
-plot(TX,X(1,:),'s-','Color',sstblue);
-grid on;
-hold on;
-plot(TX,X(2,:),'d-','Color',sstgreen);
-for k = 1:nk
-    plot(TXopt(k,:),Xopt(1,:,k),'.--','Color',sstlightblue);
-    plot(TXopt(k,:),Xopt(2,:,k),'.-.','Color',sstlightgreen);
-end
-plot(TX,X(1,:),'s-','Color',sstblue);
-plot(TX,X(2,:),'d-','Color',sstgreen);
-hold off;
-xlabel('$$t_k$$ [s]');
-ylabel('$$x(t_k)$$');
-title('State evolution');
-legend('$$x_1$$ const.','$$x_2$$ const.','$$x_1$$ pred.','$$x_2$$ pred.','Interpreter','latex');
-
-figure(5203);
-plot(TU,U,'s-','Color',sstblue);
-grid on;
-hold on;
-for k = 1:nk
-    plot(TUopt(k,:),Uopt(:,:,k),'.--','Color',sstlightblue);
-end
-plot(TU,U,'s-','Color',sstblue);
-hold off;
-xlabel('$$t_k$$ [s]');
-ylabel('$$u(t_k)$$');
-legend('const.','pred.');
-title('Input');
-
-%% Homework question 1)
-clear X U Xopt Uopt TX TU;
-example_name = 'Homework';
-
-% Define the model parameters:
-
+%MParam.beta = 0.5;
+%MParam.m = 1;
 MParam.Ts = 0.1;
 
 % define the cost parameters
@@ -294,6 +187,7 @@ xlabel('$$t_k$$ [s]');
 ylabel('$$u(t_k)$$');
 legend('const.','pred.');
 title('Input');
+
 %% Exercise 3.3: no solution provided (mass-spring-dumper NMPC)
 
 %% Exercise 3.4: one-step controllable set
@@ -324,18 +218,17 @@ xlabel('$$x_1$$','Interpreter','Latex');
 ylabel('$$x_2$$','Interpreter','Latex');
 legend('$$\mathcal{X}$$','Pre($$\mathcal{X}$$)','$$\mathcal{K}_1(\mathcal{X})$$','Interpreter','Latex','Location','Southeast');
 
-
-
-%% 3.5
+%% Exercise 3.5: maximal controllable set
 
 % define the system
-A = [1.4 1 ;0 0.3];
-B = [0;0.5];
+A = [   1.5 0
+        1   -1.5 ];
+B = [1;0];
 sys = LTISystem('A',A,'B',B);
 
 % define the model constraint sets
-x_max = [12;12];
-u_max = 3;
+x_max = [10;10];
+u_max = 5;
 sys.x.min = -x_max;
 sys.x.max = x_max;
 sys.u.min = -u_max;
@@ -370,16 +263,16 @@ legend( '$$\mathcal{K}_{max}(\mathcal{S})$$',...
 
 %% Exercise 3.6: no solution provided (maximal controllable set)
 
-%% Ex2 homework
+%% Exercise 3.7: MPC stability analysis
 
 % define system
-A = [1 1;0 1];
-B = [0;1];
+A = [1.4 1;0 0.3];
+B = [0;0.5];
 sys = LTISystem('A',A,'B',B);
 
 % define the model constraint sets
-x_max = [10;10];
-u_max = 1;
+x_max = [12;12];
+u_max = 3;
 sys.x.min = -x_max;
 sys.x.max = x_max;
 sys.u.min = -u_max;
@@ -405,9 +298,9 @@ legend( '$$\mathcal{X}_0$$',...
 title('Feasibility set, case a)');
     
 % Case (b): define horizon and final constraint set X_f = {x = 0}:
-N = 2;
+N = 42;
 Q = eye(2);
-R = 0.01;
+R = 0.1;
 sys.x.penalty = QuadFunction(Q);
 sys.u.penalty = QuadFunction(R);
 Xf = sys.LQRSet();
@@ -429,7 +322,7 @@ title('Feasibility set, case b)');
 xf_max = 1e3*ones(2,1);
 Xf = Polyhedron('lb',-xf_max,'ub',xf_max);
 [~,isf,Nb] = GetKn(Xf,sys,1000);
-N = 9; % N = Nb + 1;
+N = 42; % N = Nb + 1;
 
 % get the feasibility set X0:
 [X0c,isfi,Nbi,Xi] = GetXi(Xf,sys,N);
@@ -446,7 +339,7 @@ legend( '$$\mathcal{X}_{N-1}$$',...
         '$$\mathcal{X}_{N-4}$$',...
         '$$\mathcal{X}_{N-5}$$',...
         '$$\mathcal{X}_0$$');
-title('Feasibility set, case c)');
+title('Feasibility set');
 
 %% Exercise 3.8: no solution provided (MPC stability analysis)
 
@@ -465,8 +358,7 @@ function [c,ceq] = statecon(XU,x0,N,nx,nu,MP)
     Ceq = zeros(nx,N);
     Ceq(:,1) = X(:,1) - x0;
     for k = 1:N
-        %Ceq(:,k+1) = f_car(X(:,k),U(:,k),MP) - X(:,k+1);
-        Ceq(:,k+1) = f_car(X(:,k),U(:,k),MP) - X(:,k+1);
+        Ceq(:,k+1) = f_pend(X(:,k),U(:,k),MP) - X(:,k+1);
     end
     ceq = reshape(Ceq,[],1); c = [];
 end
@@ -480,7 +372,3 @@ function xp = f_pend(x,u,P)
     xdot = [x(2); u(1) - 0.2*x(2)^2 - 10*sin(x(1))];
     xp = x + P.Ts*xdot;
 end
-
-
-
-

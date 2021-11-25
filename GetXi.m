@@ -3,6 +3,22 @@ function [X0,isfinite,Nb,Xi] = GetXi(Xf,sys,N)
 % invariant constraint set Xf, state constraint X, and 
 % input constraint U (the last two given inside sys).
 
-    % TODO: please implement this function based on the slides and the
-    % given "GetKn" function.
+    isfinite = 0;
+    Nb = 0;
+    X = sys.x.boundsToPolyhedron();
+    U = sys.u.boundsToPolyhedron();
+    Xi = Polyhedron;
+    Xi(N+1) = Xf;
+    i = N;
+    while i >= 1
+        PreX = sys.reachableSet('X',Xi(i+1),'U',U,'direction','backward');
+        Xi(i) = PreX.intersect(X).minHRep();
+        if Xi(i) == Xi(i+1)
+            isfinite = 1;
+            Nb = i;
+            break;
+        end
+        i = i-1;
+    end
+    X0 = Xi(i+1);
 end
