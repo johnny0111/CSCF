@@ -22,19 +22,19 @@ rho = 1.225;
 g = 9.8065;
 theta = 0.05;
 fmax = 2800;
-fmin = -2000;
+fmin = -2200;
 deltaFmax = 200;
 maxTheta = 0.1;
 dDist = 10;
-distMin = 5;
+distMin = 3;
 vRe = 20;
-ve = 20;
+ve = 25;
 we = 0;
 T = 0.1;
 
-N = 20;
+N = 30;
 Pi = 1;
-Qi = 10000;
+Qi = 1000;
 Ri = 0.001;
 
 P = blkdiag(Pi,Pi);
@@ -47,7 +47,8 @@ TX = 1:nk+1;
 Tref = 1:nk+N;
 ref = 10 * square(0.0002*Tref, 0.79);
 ref = [ref; ref];
-%% centralized
+%%
+%centralized
 Ac = [0 -1 0 0; 0 -(rho*area*Cd*ve)/m 0 0; 0 1 0 -1; 0 0 0 -(rho*area*Cd*ve)/m];
 Bc=[0 0; 1/m 0; 0 0; 0 1/m];
 C=[1 0 0 0; 0 0 1 0];
@@ -56,8 +57,6 @@ B = Bc*T;
 x10 = [1 0]';
 x20 = [1 0]';
 xd0 = [x10; x20];
-
-
 
 
 % compute centralized tracking controller
@@ -69,6 +68,8 @@ Rt = Gb'*Qb*Gb + Rb;
 St = Gb'*Qb;
 Ky = Rt^-1*St;
 K = -Ky*Fb;
+
+
 
 nu = size(B,2);
 x0 = [xd0*0 ; C*xd0];
@@ -83,54 +84,34 @@ Xd(:,2) = xd0;
 X(:,2) = x0;
 Y(:,2) = C*xd0;
 
-%% Decentralized
 
-A1c = [0 -1; 0 -(rho*area*Cd*ve)/m];
-A2c = [0 -1; 0 -(rho*area*Cd*ve)/m];
-B1c = [0; 1/m];
-B2c = [0; 1/m];
-C1 = [1 0];
-C2 = [1 0];
-A1 = eye(2) + A1c*T;
-A2 = eye(2) + A2c*T;
-B1 = B1c*T;
-B2 = B2c*T;
-nx1 = size(B1,1);
-nx2 = size(B2,1);
-nu1 = size(B1,2);
-nu2 = size(B2,2);
-A_d = blkdiag(A1,A2);
-B_d = blkdiag(B1,B2);
-C_d = blkdiag(C1,C2);
+%%compute constraints
+u_max = fmax -(0.5*rho*area*Cd*ve^2);
+u_min = -fmin - (0.5*rho*area*Cd*ve^2);
+U_max = kron(u_max,ones(N*nu,1));
+U_min = kron(u_min,ones(N*nu,1));
+M3 = tril(ones(N*nu));
+M4 = ones(N*nu,nu);
+Mu = [-M3;M3];
 
-[F1,G1,Qb1,Rb1,H1,Fd1,Gd1,Hd1] = GetBatchXiMatrices(A1,B1,C1,N,Pi,Qi,Ri);
-Gb1 = H1*G1;
-Fb1 = H1*F1;
-Rt1 = Gb1'*Qb1*Gb1 + Rb1;
-St1 = Gb1'*Qb1;
-Ky1 = Rt1^(-1)*St1;
-K1 = -Ky1*Fb1;
+du_max = deltaFmax;
+du_min = -deltaFmax;
+DU_max = kron(du_max,ones(N*nu,1));
+DU_min = kron(du_min,ones(N*nu,1));
+Mdu = [-eye(N*nu);eye(N*nu)];
+wdu = [-DU_min;DU_max];
 
-[F2,G2,Qb2,Rb2,H2,Fd2,Gd2,Hd2] = GetBatchXiMatrices(A2,B2,C2,N,Pi,Qi,Ri);
-Gb2 = H2*G2;
-Fb2 = H2*F2;
-Rt2 = Gb2'*Qb2*Gb2 + Rb2;
-St2 = Gb2'*Qb2;
-Ky2 = Rt2^(-1)*St2;
-K2 = -Ky2*Fb2;
+pr_min = -7 ;
+pr_max = 93;
+Y_min = kron(pr_min,ones(nu*(N+1),1));
+Y_max = kron(pr_max, ones(nu*(N+1),1));
+My = [-Gb; Gb];
 
+M = [Mu;Mdu;My];
 
-x0_d = [xd0*0 ; C1*x10;C2*x20];
-Xd_d(:,1) = xd0;
-X_d(:,1) = x0_d;
-Xd_d(:,2) = xd0;
-X_d(:,2) = x0_d;
-
-
-
-
-
+U(:,1) = 0;
 %%
+
 
 for k = 2:nk
     
@@ -144,10 +125,18 @@ for k = 2:nk
     Dxdk = Xd(:,k)-Xd(:,k-1);
     X(:,k) = [ Dxdk; C*Xd(:,k)];
     xk = X(:,k);
-    
+    u_1 = U(:,k-1);
+    wu = [U_max + M4*u_1;U_max - M4*u_1];
+    wy = [-Y_min + Fb*xk; Y_max - Fb*xk];
+    w = [wu;wdu;wy];
     % centralized MPC
-    dUopt(:,:,k) = reshape( K*X(:,k)+Ky*Yb ,[],N);
+      [dUo,Jo,exitflag,output,lambda] = quadprog_v2(2*Rt,2*St*(Fb*xk-Yb),M,w);
+    if exitflag~=1
+        error('Problems in the Optimization problem.');
+    end    
     
+    %dUopt(:,:,k) = reshape( K*X(:,k)+Ky*Yb ,[],N);
+    dUopt(:,:,k) = reshape( dUo ,nu,N); 
     Uopt(:,:,k) = U(:,k-1) + dUopt(:,:,k);
     Xopt(:,:,k) = reshape( Fc*xk-Gc*(K*xk-Ky*Yb) ,6,N+1);
     uk = Uopt(:,1,k);
@@ -158,19 +147,19 @@ for k = 2:nk
 
     
     % Decentralized MPC
-    Dxdk_d = Xd_d(:,k) - Xd_d(:,k-1);
-    X_d(:,k) = [Dxdk_d; C1*Xd_d(1:2,k); C2*Xd_d(3:4,k)];
+%     Dxdk_d = Xd_d(:,k) - Xd_d(:,k-1);
+%     X_d(:,k) = [Dxdk_d; C1*Xd_d(1:2,k); C2*Xd_d(3:4,k)];
     
-    dU1opt(:,:,k) = reshape( K1*[X_d(1:2,k); X_d(5,k)]+Ky1*Yb1 ,[],N);
-    %X1opt(:,:,k) = reshape( F1*[Xd_d(1:2,k); X_d(5,k)] +G1*(K1*[Xd_d(1:2,k); X_d(5,k)]+Ky1*Yb1) ,nx1,N+1);
-    dU2opt(:,:,k) = reshape( K2*[X_d(3:4,k); X_d(6,k)]+Ky2*Yb2 ,[],N);
-    %X2opt(:,:,k) = reshape( F2*Xd_d(2,k)+G2*(K2*Xd_d(2,k)+Ky2*Yb2) ,nx2,N+1);
-    dUd(:,k) = [dU1opt(:,1,k);dU2opt(:,1,k)];   
-    
-    Uopt_d(:,:,k) = U_d(:,k-1) + dUd(:,k);
-    % joint system simulation for decentralized MPC 
-    Xd_d(:,k+1) = A_d*Xd_d(:,k) + B_d*Uopt_d(:,k);
-    % compute auxiliary variables for visualization:
+%     dU1opt(:,:,k) = reshape( K1*[X_d(1:2,k); X_d(5,k)]+Ky1*Yb1 ,[],N);
+%     %X1opt(:,:,k) = reshape( F1*[Xd_d(1:2,k); X_d(5,k)] +G1*(K1*[Xd_d(1:2,k); X_d(5,k)]+Ky1*Yb1) ,nx1,N+1);
+%     dU2opt(:,:,k) = reshape( K2*[X_d(3:4,k); X_d(6,k)]+Ky2*Yb2 ,[],N);
+%     %X2opt(:,:,k) = reshape( F2*Xd_d(2,k)+G2*(K2*Xd_d(2,k)+Ky2*Yb2) ,nx2,N+1);
+%     dUd(:,k) = [dU1opt(:,1,k);dU2opt(:,1,k)];   
+%     
+%     Uopt_d(:,:,k) = U_d(:,k-1) + dUd(:,k);
+%     % joint system simulation for decentralized MPC 
+%     Xd_d(:,k+1) = A_d*Xd_d(:,k) + B_d*Uopt_d(:,k);
+%     % compute auxiliary variables for visualization:
     
     TUopt(k,:) = k:k+N-1;
     TXopt(k,:) = k:k+N;
@@ -178,16 +167,18 @@ for k = 2:nk
 end
 X(:,k+1) = [ Xd(:,k+1)-Xd(:,k) ; C*Xd(:,k+1)];
 
+%%
 figure(7101);
 %plot(ref(1,:),ref(2,:),'k+-');
 grid on;
 hold on;
 plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
 plot(Xd(3,:), Xd(4,:), 's-','Color','magenta');
-plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
-plot(Xd_d(3,:),Xd_d(4,:),'o-','Color','red');
-plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
-plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
+%plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
+%plot(Xd_d(3,:),Xd_d(4,:),'o-','Color','red');
+
+% plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
+% plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
 hold off;
 xlabel('$$x_1$$');
 ylabel('$$x_2$$');
@@ -203,11 +194,10 @@ plot(TX,Xd(1,:),'s-','Color',sstblue);
 plot(TX,Xd(2,:),'d-','Color',sstdarkblue);
 plot(TX,Xd(3,:),'.--','Color',sstlightblue);
 plot(TX,Xd(4,:),'-*','Color','magenta');
-plot(TX,Xd_d(1,:),'o-','Color',sstgreen);
-plot(TX,Xd_d(2,:),'+-','Color',sstdarkgreen);
-plot(TX,Xd_d(3,:),'o-','Color','black');
-plot(TX,Xd_d(4,:),'+-','Color','yellow');
-
+% plot(TX,Xd_d(1,:),'o-','Color',sstgreen);
+% plot(TX,Xd_d(2,:),'+-','Color',sstdarkgreen);
+% plot(TX,Xd_d(3,:),'o-','Color','black');
+% plot(TX,Xd_d(4,:),'+-','Color','yellow');
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$x(t_k)$$');
@@ -219,18 +209,23 @@ plot(TU,U(1,:),'s-','Color',sstblue);
 grid on;
 hold on;
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
-plot(TU,dUd(1,:),'o-','Color',sstgreen);
-plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
-
+% plot(TU,dUd(1,:),'o-','Color',sstgreen);
+% plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
 plot(TU,U(1,:),'s-','Color',sstblue);
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
-plot(TU,dUd(1,:),'o-','Color',sstgreen);
-plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
+% plot(TU,dUd(1,:),'o-','Color',sstgreen);
+% plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$u(t_k)$$');
 legend('$$u_1$$ cent.','$$u_2$$ cent.','$$u_1$$ decent.','$$u_2$$ decent.');
 title('Input');
+
+
+
+
+
+
 
 
 

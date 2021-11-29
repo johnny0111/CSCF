@@ -21,9 +21,9 @@ area = 1.8;
 rho = 1.225;
 g = 9.8065;
 theta = 0.05;
-fmax = 2600;
+fmax = 2800;
 fmin = -2000;
-deltaFmax = 50;
+deltaFmax = 200;
 maxTheta = 0.1;
 dDist = 10;
 distMin = 5;
@@ -34,8 +34,9 @@ T = 0.1;
 
 N = 20;
 Pi = 1;
-Qi = 1000;
+Qi = 10000;
 Ri = 0.001;
+
 P = blkdiag(Pi,Pi);
 Q = blkdiag(Qi,Qi);
 R = blkdiag(Ri,Ri);
@@ -177,23 +178,25 @@ for k = 2:nk
 end
 X(:,k+1) = [ Xd(:,k+1)-Xd(:,k) ; C*Xd(:,k+1)];
 
-figure(7101);
-plot(ref(1,:),ref(2,:),'k+-');
-grid on;
-hold on;
-plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
-plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
-for k = 1:nk
-    plot(Xopt(1,:,k),Xopt(2,:,k),'.--','Color',sstlightblue);
-    %plot(X1opt(1,:,k),X2opt(1,:,k),'.-.','Color',sstlightgray);
-end
- plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
- plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
-hold off;
-xlabel('$$x_1$$');
-ylabel('$$x_2$$');
-legend('ref.','cent.','decent.','pred. cent.','pred. dec.');
-title('Phase plot');
+% figure(7101);
+% %plot(ref(1,:),ref(2,:),'k+-');
+% grid on;
+% hold on;
+% plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
+% plot(Xd(3,:), Xd(4,:), 's-','Color','magenta');
+% plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
+% plot(Xd_d(3,:),Xd_d(4,:),'o-','Color','red');
+% for k = 1:nk
+%     %plot(Xopt(1,:,k),Xopt(2,:,k),'.--','Color',sstlightblue);
+%     %plot(X1opt(1,:,k),X2opt(1,:,k),'.-.','Color',sstlightgray);
+% end
+%  plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
+%  plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
+% hold off;
+% xlabel('$$x_1$$');
+% ylabel('$$x_2$$');
+% legend('car 1 cent.','car 2 cent','car 1 dec.','car2 dec.');
+% title('Phase plot');
 
 figure(7102);
 plot(Tref,ref(1,:),'k+-');
@@ -202,22 +205,27 @@ hold on;
 plot(Tref,ref(2,:),'k+--');
 plot(TX,Xd(1,:),'s-','Color',sstblue);
 plot(TX,Xd(2,:),'d-','Color',sstdarkblue);
+plot(TX,Xd(3,:),'.--','Color',sstlightblue);
+plot(TX,Xd(4,:),'-*','Color','magenta');
 plot(TX,Xd_d(1,:),'o-','Color',sstgreen);
 plot(TX,Xd_d(2,:),'+-','Color',sstdarkgreen);
-for k = 1:nk
-    plot(TXopt(k,:),Xopt(1,:,k),'.--','Color',sstlightblue);
-    plot(TXopt(k,:),Xopt(2,:,k),'.-.','Color',sstlightgray);
-end
+
+plot(TX,Xd_d(3,:),'o-','Color',sstgreen);
+plot(TX,Xd_d(4,:),'+-','Color',sstdarkgreen);
+% for k = 1:nk
+%     plot(TXopt(k,:),Xopt(1,:,k),'.--','Color',sstlightblue);
+%     plot(TXopt(k,:),Xopt(2,:,k),'.-.','Color',sstlightgray);
+% end
 plot(Tref,ref(1,:),'k+-');
 plot(Tref,ref(2,:),'k+--');
 plot(TX,Xd(1,:),'s-','Color',sstblue);
 plot(TX,Xd(2,:),'d-','Color',sstdarkblue);
 plot(TX,Xd_d(1,:),'o-','Color',sstgreen);
-plot(TX,Xd_d(2,:),'+-','Color',sstdarkgreen);
+plot(TX,Xd_d(2,:),'<','Color',sstdarkgreen);
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$x(t_k)$$');
-legend('$$r_1$$','$$r_2$$','$$x_1$$ cen.','$$x_2$$ cen.','$$x_1$$ decen.','$$x_2$$ decen.','$$x_1$$ pred. cen.','$$x_2$$ pred. cen.','Location','SouthEast');
+legend('$$r_1$$','$$r_2$$','$$x_1$$ cen.','$$x_2$$ cen.','$$x_1$$ decen.','$$x_2$$ decen.','$$x_3$$ cen.','$$x_4$$  cen.','Location','SouthEast');
 title('State evolution');
 
 figure(7103);
@@ -225,16 +233,16 @@ plot(TU,U(1,:),'s-','Color',sstblue);
 grid on;
 hold on;
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
-%plot(TU,Ud(1,:),'o-','Color',sstgreen);
-%plot(TU,Ud(2,:),'+-','Color',sstdarkgreen);
+plot(TU,dUd(1,:),'o-','Color',sstgreen);
+plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
 for k = 1:nk
     plot(TUopt(k,:),Uopt(1,:,k),'.--','Color',sstlightblue);
     plot(TUopt(k,:),Uopt(2,:,k),'.-.','Color',sstlightgray);
 end
 plot(TU,U(1,:),'s-','Color',sstblue);
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
-%plot(TU,Ud(1,:),'o-','Color',sstgreen);
-%plot(TU,Ud(2,:),'+-','Color',sstdarkgreen);
+plot(TU,dUd(1,:),'o-','Color',sstgreen);
+plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$u(t_k)$$');
