@@ -27,8 +27,8 @@ deltaFmax = 200;
 maxTheta = 0.1;
 dDist = 10;
 distMin = 5;
-vRe = 20;
-ve = 20;
+vRe = 25;
+ve = 25;
 we = 0;
 T = 0.1;
 

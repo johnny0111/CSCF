@@ -27,15 +27,16 @@ deltaFmax = 200;
 maxTheta = 0.1;
 dDist = 10;
 distMin = 3;
-vRe = 20;
+vRe = 25;
 ve = 25;
 we = 0;
 T = 0.1;
 
 N = 30;
-Pi = 1;
+Pi = 10;
 Qi = 1000;
 Ri = 0.001;
+%Ri = 0.1;
 
 P = blkdiag(Pi,Pi);
 Q = blkdiag(Qi,Qi);
@@ -44,6 +45,7 @@ R = blkdiag(Ri,Ri);
 nk = 500;
 TU = 1:nk;
 TX = 1:nk+1;
+%TX = 0:T:(nk+1)*T - T;
 Tref = 1:nk+N;
 ref = 10 * square(0.0002*Tref, 0.79);
 ref = [ref; ref];
@@ -90,8 +92,8 @@ u_max = fmax -(0.5*rho*area*Cd*ve^2);
 u_min = -fmin - (0.5*rho*area*Cd*ve^2);
 U_max = kron(u_max,ones(N*nu,1));
 U_min = kron(u_min,ones(N*nu,1));
-M3 = tril(ones(N*nu));
-M4 = ones(N*nu,nu);
+M3 = kron(tril(ones(N)), eye(nu));
+M4 = kron(ones(N,1), eye(nu));
 Mu = [-M3;M3];
 
 du_max = deltaFmax;
@@ -107,18 +109,14 @@ Y_min = kron(pr_min,ones(nu*(N+1),1));
 Y_max = kron(pr_max, ones(nu*(N+1),1));
 My = [-Gb; Gb];
 
-M = [Mu;Mdu;My];
-
+M = [Mu;Mdu];
+%M = Mu;
 U(:,1) = 0;
 %%
 
 
 for k = 2:nk
     
-    % compute initial condition and current reference sequence
-%     Yb = [ref(:,k:k+N)';ref(:,k:k+N)'];
-%     Yb1 = ref(1,k:k+N)';
-%     Yb2 = ref(2,k:k+N)';
     Yb = reshape(ref(:,k:k+N),[],1);
     Yb1 = ref(1,k:k+N)';
     Yb2 = ref(2,k:k+N)';
@@ -128,7 +126,8 @@ for k = 2:nk
     u_1 = U(:,k-1);
     wu = [U_max + M4*u_1;U_max - M4*u_1];
     wy = [-Y_min + Fb*xk; Y_max - Fb*xk];
-    w = [wu;wdu;wy];
+    w = [wu;wdu];
+    %w = wu;
     % centralized MPC
       [dUo,Jo,exitflag,output,lambda] = quadprog_v2(2*Rt,2*St*(Fb*xk-Yb),M,w);
     if exitflag~=1
@@ -137,52 +136,36 @@ for k = 2:nk
     
     %dUopt(:,:,k) = reshape( K*X(:,k)+Ky*Yb ,[],N);
     dUopt(:,:,k) = reshape( dUo ,nu,N); 
+    duPlot(:,k) = dUopt(:,1,k) ;
     Uopt(:,:,k) = U(:,k-1) + dUopt(:,:,k);
     Xopt(:,:,k) = reshape( Fc*xk-Gc*(K*xk-Ky*Yb) ,6,N+1);
-    uk = Uopt(:,1,k);
-    U(:,k) = uk;
+    U(:,k) = Uopt(:,1,k);
     
     Xd(:,k+1) = A*Xd(:,k) + B*U(:,k) ;
     Y(:,k+1) = C*Xd(:,k+1);
 
     
-    % Decentralized MPC
-%     Dxdk_d = Xd_d(:,k) - Xd_d(:,k-1);
-%     X_d(:,k) = [Dxdk_d; C1*Xd_d(1:2,k); C2*Xd_d(3:4,k)];
-    
-%     dU1opt(:,:,k) = reshape( K1*[X_d(1:2,k); X_d(5,k)]+Ky1*Yb1 ,[],N);
-%     %X1opt(:,:,k) = reshape( F1*[Xd_d(1:2,k); X_d(5,k)] +G1*(K1*[Xd_d(1:2,k); X_d(5,k)]+Ky1*Yb1) ,nx1,N+1);
-%     dU2opt(:,:,k) = reshape( K2*[X_d(3:4,k); X_d(6,k)]+Ky2*Yb2 ,[],N);
-%     %X2opt(:,:,k) = reshape( F2*Xd_d(2,k)+G2*(K2*Xd_d(2,k)+Ky2*Yb2) ,nx2,N+1);
-%     dUd(:,k) = [dU1opt(:,1,k);dU2opt(:,1,k)];   
-%     
-%     Uopt_d(:,:,k) = U_d(:,k-1) + dUd(:,k);
-%     % joint system simulation for decentralized MPC 
-%     Xd_d(:,k+1) = A_d*Xd_d(:,k) + B_d*Uopt_d(:,k);
-%     % compute auxiliary variables for visualization:
     
     TUopt(k,:) = k:k+N-1;
     TXopt(k,:) = k:k+N;
     
 end
 X(:,k+1) = [ Xd(:,k+1)-Xd(:,k) ; C*Xd(:,k+1)];
-
+MAX = u_max*ones(1,nk);
 %%
+
+
 figure(7101);
-%plot(ref(1,:),ref(2,:),'k+-');
+
 grid on;
 hold on;
 plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
 plot(Xd(3,:), Xd(4,:), 's-','Color','magenta');
-%plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
-%plot(Xd_d(3,:),Xd_d(4,:),'o-','Color','red');
 
-% plot(Xd(1,:),Xd(2,:),'s-','Color',sstblue);
-% plot(Xd_d(1,:),Xd_d(2,:),'o-','Color',sstgreen);
 hold off;
 xlabel('$$x_1$$');
 ylabel('$$x_2$$');
-legend('car 1 cent.','car 2 cent','car 1 dec.','car2 dec.');
+legend('car1 cent.','car2 cent','car1 dec.','car2 dec.');
 title('Phase plot');
 
 figure(7102);
@@ -194,10 +177,6 @@ plot(TX,Xd(1,:),'s-','Color',sstblue);
 plot(TX,Xd(2,:),'d-','Color',sstdarkblue);
 plot(TX,Xd(3,:),'.--','Color',sstlightblue);
 plot(TX,Xd(4,:),'-*','Color','magenta');
-% plot(TX,Xd_d(1,:),'o-','Color',sstgreen);
-% plot(TX,Xd_d(2,:),'+-','Color',sstdarkgreen);
-% plot(TX,Xd_d(3,:),'o-','Color','black');
-% plot(TX,Xd_d(4,:),'+-','Color','yellow');
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$x(t_k)$$');
@@ -205,20 +184,17 @@ legend('$$r_1$$','$$r_2$$','car1 $$x_1$$ cen.','car1 $$x_2$$ cen.','car 2$$x_1$$
 title('State evolution');
 
 figure(7103);
-plot(TU,U(1,:),'s-','Color',sstblue);
+plot(TU,U(1,:),'s-','Color','magenta');
 grid on;
 hold on;
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
-% plot(TU,dUd(1,:),'o-','Color',sstgreen);
-% plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
-plot(TU,U(1,:),'s-','Color',sstblue);
-plot(TU,U(2,:),'d-','Color',sstdarkblue);
-% plot(TU,dUd(1,:),'o-','Color',sstgreen);
-% plot(TU,dUd(2,:),'+-','Color',sstdarkgreen);
+plot(TU, duPlot(1,:), 'k+--','Color', sstdarkgreen);
+plot(TU, duPlot(2,:), '-*','Color', sstlightgreen);
+plot(TU, MAX);
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$u(t_k)$$');
-legend('$$u_1$$ cent.','$$u_2$$ cent.','$$u_1$$ decent.','$$u_2$$ decent.');
+legend('$$u_1$$ cent.','$$u_2$$ cent.', 'du1', 'du2');
 title('Input');
 
 

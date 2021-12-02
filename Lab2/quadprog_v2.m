@@ -365,7 +365,7 @@ end
 switch output.algorithm
     case interiorPointConvex
   
-        defaultopt.MaxIter = 9000000;
+        defaultopt.MaxIter = 900;
         defaultopt.TolFun = 1e-8;
         defaultopt.TolX = 1e-12;
         % Set ConvexCheck to notify solver that the problem should be monitored
