@@ -1,5 +1,8 @@
 %%
-clear all;
+function flag = Lab2_CD_const(Ri,Qi)
+%%
+% function flag = Lab2_CD_const(Ri,Qi)
+%clear all;
 close all;
 clc;
 
@@ -32,17 +35,20 @@ ve = 25;
 we = 0;
 T = 0.1;
 
-N = 30;
-Pi = 10;
-Qi = 1000;
-Ri = 0.001;
-%Ri = 0.1;
+N=45;
+
+% Qi=40;%2600
+% Ri=0.0002*Qi;%0.00017;
+
+
+Pi=100;
+
 
 P = blkdiag(Pi,Pi);
 Q = blkdiag(Qi,Qi);
 R = blkdiag(Ri,Ri);
 
-nk = 500;
+nk = 600;%250;
 TU = 1:nk;
 TX = 1:nk+1;
 %TX = 0:T:(nk+1)*T - T;
@@ -56,8 +62,8 @@ Bc=[0 0; 1/m 0; 0 0; 0 1/m];
 C=[1 0 0 0; 0 0 1 0];
 A = eye(4) + Ac*T;
 B = Bc*T;
-x10 = [1 0]';
-x20 = [1 0]';
+x10 = [5 2]';
+x20 = [5 2]';
 xd0 = [x10; x20];
 
 
@@ -89,7 +95,7 @@ Y(:,2) = C*xd0;
 
 %%compute constraints
 u_max = fmax -(0.5*rho*area*Cd*ve^2);
-u_min = -fmin - (0.5*rho*area*Cd*ve^2);
+u_min = fmin - (0.5*rho*area*Cd*ve^2);
 U_max = kron(u_max,ones(N*nu,1));
 U_min = kron(u_min,ones(N*nu,1));
 M3 = kron(tril(ones(N)), eye(nu));
@@ -124,14 +130,18 @@ for k = 2:nk
     X(:,k) = [ Dxdk; C*Xd(:,k)];
     xk = X(:,k);
     u_1 = U(:,k-1);
-    wu = [U_max + M4*u_1;U_max - M4*u_1];
+    wu = [-U_min + M4*u_1;U_max - M4*u_1];
     wy = [-Y_min + Fb*xk; Y_max - Fb*xk];
     w = [wu;wdu];
+    
     %w = wu;
     % centralized MPC
       [dUo,Jo,exitflag,output,lambda] = quadprog_v2(2*Rt,2*St*(Fb*xk-Yb),M,w);
     if exitflag~=1
-        error('Problems in the Optimization problem.');
+            flag = -1
+            return;
+    else
+        flag = 1;
     end    
     
     %dUopt(:,:,k) = reshape( K*X(:,k)+Ky*Yb ,[],N);
@@ -152,6 +162,7 @@ for k = 2:nk
 end
 X(:,k+1) = [ Xd(:,k+1)-Xd(:,k) ; C*Xd(:,k+1)];
 MAX = u_max*ones(1,nk);
+
 %%
 
 
@@ -198,7 +209,17 @@ legend('$$u_1$$ cent.','$$u_2$$ cent.', 'du1', 'du2');
 title('Input');
 
 
+%end
 
+
+
+
+
+
+
+
+
+end
 
 
 

@@ -1,6 +1,7 @@
 %%
+% function flag = Lab2_CD_const(Ri,Qi)
 clear all;
-close all;
+%close all;
 clc;
 
 set(0,'defaultTextInterpreter','latex');
@@ -21,9 +22,9 @@ area = 1.8;
 rho = 1.225;
 g = 9.8065;
 theta = 0.05;
-fmax = 13000;%2800;
-fmin = -13000;%-2200;
-deltaFmax = 200;
+fmax = 2800;
+fmin = -2200;
+deltaFmax = 200%300;
 maxTheta = 0.1;
 dDist = 10;
 distMin = 3;
@@ -32,19 +33,27 @@ ve = 25;
 we = 0;
 T = 0.1;
 
-N = 30;
-Pi = 100;
-Qi = 1000;
-%Ri = 0.0002;
-Ri = 0.01;
+N=75;
+
+% Qi=10;%2600
+% Ri=0.0002*Qi;%0.00017;
+Qi = 153;%100
+Ri = 0.000016;
+Pi=100;
+% Pi = 10;
+Qi =3800;%100
+Ri = 0.0000001%0.00019;
+Pi=5000000;
+N=50;
 
 P = blkdiag(Pi,Pi);
 Q = blkdiag(Qi,Qi);
 R = blkdiag(Ri,Ri);
 
-nk = 500;
+nk = 600;%250;
 TU = 1:nk;
 TX = 1:nk+1;
+%TX = 0:T:(nk+1)*T - T;
 Tref = 1:nk+N;
 ref = 10 * square(0.0002*Tref, 0.79);
 ref = [ref; ref];
@@ -55,8 +64,8 @@ Bc=[0 0; 1/m 0; 0 0; 0 1/m];
 C=[1 0 0 0; 0 0 1 0];
 A = eye(4) + Ac*T;
 B = Bc*T;
-x10 = [1 0]';
-x20 = [1 0]';
+x10 = [5 0]';
+x20 = [5 0]';
 xd0 = [x10; x20];
 
 
@@ -69,7 +78,6 @@ Rt = Gb'*Qb*Gb + Rb;
 St = Gb'*Qb;
 Ky = Rt^-1*St;
 K = -Ky*Fb;
-
 
 
 nu = size(B,2);
@@ -88,11 +96,11 @@ Y(:,2) = C*xd0;
 
 %%compute constraints
 u_max = fmax -(0.5*rho*area*Cd*ve^2);
-u_min = -fmin - (0.5*rho*area*Cd*ve^2);
+u_min = fmin - (0.5*rho*area*Cd*ve^2);
 U_max = kron(u_max,ones(N*nu,1));
 U_min = kron(u_min,ones(N*nu,1));
-M3 = tril(ones(N*nu));
-M4 = ones(N*nu,nu);
+M3 = kron(tril(ones(N)), eye(nu));
+M4 = kron(ones(N,1), eye(nu));
 Mu = [-M3;M3];
 
 du_max = deltaFmax;
@@ -108,8 +116,8 @@ Y_min = kron(pr_min,ones(nu*(N+1),1));
 Y_max = kron(pr_max, ones(nu*(N+1),1));
 My = [-Gb; Gb];
 
-%M = [Mu;Mdu];
-M = Mu;
+M = [Mu;Mdu];
+%M = Mu;
 U(:,1) = 0;
 %%
 
@@ -123,23 +131,28 @@ for k = 2:nk
     X(:,k) = [ Dxdk; C*Xd(:,k)];
     xk = X(:,k);
     u_1 = U(:,k-1);
-    wu = [U_max + M4*u_1;U_max - M4*u_1];
+    wu = [-U_min + M4*u_1;U_max - M4*u_1];
     wy = [-Y_min + Fb*xk; Y_max - Fb*xk];
-    %w = [wu;wdu];
-    w = wu;
+    w = [wu;wdu];
+    
+    %w = wu;
     % centralized MPC
       [dUo,Jo,exitflag,output,lambda] = quadprog_v2(2*Rt,2*St*(Fb*xk-Yb),M,w);
     if exitflag~=1
-        error('Problems in the Optimization problem.');
+            k
+            error('Problems in the Optimization problem.');
+            
+            
+    else
+        flag = 1;
     end    
     
     %dUopt(:,:,k) = reshape( K*X(:,k)+Ky*Yb ,[],N);
     dUopt(:,:,k) = reshape( dUo ,nu,N); 
-    duPlot = dUopt(:,1:k);
+    duPlot(:,k) = dUopt(:,1,k) ;
     Uopt(:,:,k) = U(:,k-1) + dUopt(:,:,k);
     Xopt(:,:,k) = reshape( Fc*xk-Gc*(K*xk-Ky*Yb) ,6,N+1);
-    uk = Uopt(:,1,k);
-    U(:,k) = uk;
+    U(:,k) = Uopt(:,1,k);
     
     Xd(:,k+1) = A*Xd(:,k) + B*U(:,k) ;
     Y(:,k+1) = C*Xd(:,k+1);
@@ -151,7 +164,8 @@ for k = 2:nk
     
 end
 X(:,k+1) = [ Xd(:,k+1)-Xd(:,k) ; C*Xd(:,k+1)];
-MAX = ones(
+MAX = u_max*ones(1,nk);
+
 %%
 
 
@@ -190,6 +204,7 @@ hold on;
 plot(TU,U(2,:),'d-','Color',sstdarkblue);
 plot(TU, duPlot(1,:), 'k+--','Color', sstdarkgreen);
 plot(TU, duPlot(2,:), '-*','Color', sstlightgreen);
+plot(TU, MAX);
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$u(t_k)$$');
@@ -197,7 +212,7 @@ legend('$$u_1$$ cent.','$$u_2$$ cent.', 'du1', 'du2');
 title('Input');
 
 
-
+%end
 
 
 
