@@ -83,10 +83,10 @@ C1_ext = [zeros(ny1,nx1),eye(ny1)];
 C2_ext = [zeros(ny2,nx2),eye(ny2)];
 %% Cost
 % cost parameters
-N = 40;
-Pi = 20;
-Qi = 1000;
-Ri = 0.0001;
+N = 60;
+Pi = 15000;
+Qi = 0.05;
+Ri = 0.001;
 alpha1 = 1;
 alpha2 = 1;
 % distributed steps parameters
@@ -127,7 +127,7 @@ Y_min1 = kron(pr_min,ones(nu1*(N+1),1));
 Y_max1 = kron(pr_max, ones(nu1*(N+1),1));
 My = [-Gb11; Gb11];
 
-M1 = Mdu1;
+M1 = [Mdu1; Mu1];
 
 
 
@@ -156,7 +156,7 @@ Y_min2 = kron(pr_min,ones(nu2*(N+1),1));
 Y_max2 = kron(pr_max, ones(nu2*(N+1),1));
 My2 = [-Gb22; Gb22];
 
-M2 = Mdu2;
+M2 = [Mdu2; Mu1];
 
 
 
@@ -216,25 +216,27 @@ for k = 2:nk
     Dxdk2 = [Xd(3,k);Xd(2,k);Xd(4,k)]-[Xd(3,k-1);Xd(2,k-1);Xd(4,k-1)];
     X2(:,k) = [ Dxdk2; C2*[Xd(3,k);Xd(2,k);Xd(4,k)]];
     x2k = X2(:,k);
+    wu1 = [-U_min1 + M41*u(1,k-1);U_max1 - M41*u(1,k-1)];
+    wu2 = [-U_min2 + M42*u(2,k-1);U_max2 - M41*u(2,k-1)];
     
     U1p = reshape( U1(:,:,k-1) ,[],1);
     U2p = reshape( U2(:,:,k-1) ,[],1);
 
     %wu1 = [-U_min1 + M41*U1p;U_max1 - M41*U1p];
     %wu2 = [-U_min2 + M42*U2p;U_max2 - M42*U2p];
-    wr1 = wdu1;
-    wr2 = wdu2;
+    wr1 = [wdu1;wu1];
+    wr2 = [wdu2;wu2];
     % Get optimal sequence for player 1
     St1 = S11x*x1k - S11y*Yb1 + S12x*x2k - S12y*Yb2 + S12u*U2p;
     [U1o,J1o,exitflag,output,lambda] = quadprog(Rt1,St1,M1,wr1);
-    if exitflag~=1
+    if exitflag<0
         error('Problems in the Optimization problem (player 1).');
     end
     
     % Get optimal sequence for player 2
     St2 = S21x*x1k - S21y*Yb1 + S22x*x2k - S22y*Yb2 + S21u*U1p ;
-    [U2o,J2o,exitflag,output,lambda] = quadprog(Rt2,St2,M2,wr2);
-    if exitflag~=1
+    [U2o,J2o,exitflag,output,lambda] = quadprog(Rt2,St2,M2,wr1);
+    if exitflag<0
         error('Problems in the Optimization problem (player 2).');
     end
     
@@ -251,7 +253,7 @@ for k = 2:nk
     % apply first value at each player
     u1k = U1(:,1,k);
     u2k = U2(:,1,k);
-    u(:,k) = [ u1k- u(1,k-1) ; u2k-u(2,k-1) ];
+    u(:,k) = [ u1k+  u(1,k-1) ; u2k+u(2,k-1) ];
     
     % simulate system for distributed MPC
     Xd(:,k+1) = A*Xd(:,k) + B*u(:,k); %simulate joint system

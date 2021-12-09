@@ -10,11 +10,11 @@ S11y = Gb11'*Qb1;
 S12x = Gb21'*Qb2*Fb2;
 S12y = Gb21'*Qb2;
 S12u = Gb11'*Qb1*Gb12 + Gb21'*Qb2*Gb22;
-K11 = -inv(Rt1)*S11x;
-K12 = -inv(Rt1)*S12x;
-K11y = inv(Rt1)*S11y;
-K12y = inv(Rt1)*S12y;
-L1 = -inv(Rt1)*S12u;
+% K11 = -inv(Rt1)*S11x;
+% K12 = -inv(Rt1)*S12x;
+% K11y = inv(Rt1)*S11y;
+% K12y = inv(Rt1)*S12y;
+% L1 = -inv(Rt1)*S12u;
 
 % MPC 2 gains
 Rt2 = Rb2 + Gb22'*Qb2*Gb22 + Gb12'*Qb1*Gb12;
@@ -23,11 +23,11 @@ S22y = Gb22'*Qb2;
 S21x = Gb12'*Qb1*Fb1;
 S21y = Gb12'*Qb1;
 S21u = Gb22'*Qb2*Gb21 + Gb12'*Qb1*Gb11;
-K22 = -inv(Rt2)*S22x;
-K21 = -inv(Rt2)*S21x;
-K22y = inv(Rt2)*S22y;
-K21y = inv(Rt2)*S21y;
-L2 = -inv(Rt2)*S21u;
+% K22 = -inv(Rt2)*S22x;
+% K21 = -inv(Rt2)*S21x;
+% K22y = inv(Rt2)*S22y;
+% K21y = inv(Rt2)*S21y;
+% L2 = -inv(Rt2)*S21u;
 
 end
 

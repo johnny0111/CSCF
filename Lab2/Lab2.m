@@ -169,7 +169,7 @@ for k = 2:nk
     
     Uopt_d(:,:,k) = U_d(:,k-1) + dUd(:,k);
     % joint system simulation for decentralized MPC 
-    Xd_d(:,k+1) = A_d*Xd_d(:,k) + B_d*Uopt_d(:,k);
+    Xd_d(:,k+1) = A*Xd_d(:,k) + B*Uopt_d(:,k);
     % compute auxiliary variables for visualization:
     
     TUopt(k,:) = k:k+N-1;
