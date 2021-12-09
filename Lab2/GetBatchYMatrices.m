@@ -1,29 +1,25 @@
-function [ Fb,Gb1,Gb2,Qb,Rb] = GetBatchYdistMatrices(A,B1,B2,C,N,P,Q,R,alpha)
-                                                        
+function [Fb,Gb,Qb,Rb,F,G,H] = GetBatchYMatrices(A,B,C,N,P,Q,R)
+% Returns matrices for batch computation of state sequence and cost 
+% functional
+
     F = [];
-    G1 = [];
-    G2 = [];
+    G = [];
     H = [];
     Qb = [];
     Rb = [];
     for n = 0:N
         % state matrices
         F = [F ; A^n];
-        Gi1 = [];
-        Gi2 = [];
+        Gi = [];
         for m = 0:N-1
             ni = n-m-1;
-            Gaux1 = A^ni*B1;
-            Gaux2 = A^ni*B2;
+            Gaux = A^ni*B;
             if ni < 0
-                Gaux1 = Gaux1*0;
-                Gaux2 = Gaux2*0;
+                Gaux = Gaux*0;
             end
-            Gi1 = [Gi1 , Gaux1];
-            Gi2 = [Gi2 , Gaux2];
+            Gi = [Gi , Gaux];
         end
-        G1 = [G1 ; Gi1];
-        G2 = [G2 ; Gi2];
+        G = [G ; Gi];
         H = blkdiag(H,C);
 
         % cost matrices
@@ -39,11 +35,7 @@ function [ Fb,Gb1,Gb2,Qb,Rb] = GetBatchYdistMatrices(A,B1,B2,C,N,P,Q,R,alpha)
 
     % compute output matrices
     Fb = H*F;
-    Gb1 = H*G1;
-    Gb2 = H*G2;
-    Qb = alpha*Qb;
-    Rb = alpha*Rb;
+    Gb = H*G;
 
 end
-
 

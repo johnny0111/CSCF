@@ -1,7 +1,7 @@
 %%
 % function flag = Lab2_CD_const(Ri,Qi)
 clear all;
-%close all;
+close all;
 clc;
 
 set(0,'defaultTextInterpreter','latex');
@@ -43,7 +43,7 @@ Pi=100;
 % Pi = 10;
 Qi =3800;%100
 Ri = 0.0000001%0.00019;
-Pi=5000000;
+Pi=50000;
 N=50;
 
 P = blkdiag(Pi,Pi);
@@ -154,7 +154,7 @@ for k = 2:nk
     Xopt(:,:,k) = reshape( Fc*xk-Gc*(K*xk-Ky*Yb) ,6,N+1);
     U(:,k) = Uopt(:,1,k);
     
-    Xd(:,k+1) = A*Xd(:,k) + B*U(:,k) ;
+    Xd(:,k+1) = A*Xd(:,k) + B*U(:,k) + 0.005*rand;
     Y(:,k+1) = C*Xd(:,k+1);
 
     
@@ -179,7 +179,7 @@ plot(Xd(3,:), Xd(4,:), 's-','Color','magenta');
 hold off;
 xlabel('$$x_1$$');
 ylabel('$$x_2$$');
-legend('car1 cent.','car2 cent','car1 dec.','car2 dec.');
+legend('car1 cent.','car2 cent');
 title('Phase plot');
 
 figure(7102);
