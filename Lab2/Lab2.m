@@ -103,6 +103,10 @@ A_d = blkdiag(A1,A2);
 B_d = blkdiag(B1,B2);
 C_d = blkdiag(C1,C2);
 
+x10d = [1 0]';
+x20d = [1 0];
+xd0d = [x10; x20];
+
 [F1,G1,Qb1,Rb1,H1,Fd1,Gd1,Hd1] = GetBatchXiMatrices(A1,B1,C1,N,Pi,Qi,Ri);
 Gb1 = H1*G1;
 Fb1 = H1*F1;

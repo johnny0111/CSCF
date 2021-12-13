@@ -428,7 +428,7 @@ w1 = 0.4;
 w2 = 0.3;
 w3 = 1-w1-w2;
 np = 2;
-
+[Fb,Gb,Qb,Rb] = GetBatchYNdistMatrices(Ai,Bij,Ci,N,Pi,Qi,Ri,alphai);
 % compute centralized tracking controller
 P = blkdiag(Pi,Pi,Pi);
 Q = blkdiag(Qi,Qi,Qi);

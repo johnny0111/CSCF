@@ -93,8 +93,10 @@ alpha2 = 1;
 w1 = 0.5;
 w2 = 1-w1;
 np=2;
-
-
+Ai={A1_ext,A2_ext};
+Bi={B11_ext,B12_ext;B21_ext,B22_ext};
+Ci={C1_ext,C2_ext};
+[Fb,Gb,Qb,Rb] = GetBatchYNdistMatrices(Ai,Bi,Ci,N,Pi,Qi,Ri,alpha1)
 %% Distributed Batch Matrices
 
 [Fb1,Gb11,Gb12,Qb1,Rb1] = GetBatchYdistMatrices(A1_ext,B11_ext,B12_ext,C1_ext,N,Pi,Qi,Ri,alpha1);
