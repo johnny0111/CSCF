@@ -1,0 +1,594 @@
+% ------------------------------------------------------------------
+% FCT report Package
+% ------------------------------------------------------------------
+% Author: Bruno Guerreiro
+%
+% Date: 2020/09/26
+%
+% Files: You need the following files
+%  1) FCTReport.sty
+%  2) FCT_1_CMYK.pdf
+%
+% Package Options:
+%  \usepackage[Assignment]{FCTReport}
+%  \usepackage[Paper]{FCTReport}
+%  \usepackage[StudentReport]{FCTReport}
+%
+% Note: The following commands are defined, in a similar fashion to
+%   the existing commands \author, \title, and \date
+%
+%  \course                ... course name
+%  \professor			  ... professor responsible for course
+%  \department            ... FCT department
+%  \coverfigurefile       ... some figure to include in file
+%
+% ------------------------------------------------------------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{FCTReport}[2019/08/02, Bruno J. N. Guerreiro, bj.guerreiro@fct.unl.pt]
+
+% setup variables
+\let\@title\@empty
+\let\@author\@empty
+\let\@date\@empty
+
+\let\@course\@empty
+\let\@subtitle\@empty
+\let\@professor\@empty
+\let\@department\@empty
+\let\@school\@empty
+\let\@university\@empty
+\let\@coverfigurefile\@empty
+\let\@duration\@empty
+\let\@instructions\@empty
+
+% Command definitions
+\newcommand{\course}     		[1]{\gdef\@course{#1}}
+\newcommand{\subtitle}     		[1]{\gdef\@subtitle{#1}}
+\newcommand{\professor}    		[1]{\gdef\@professor{#1}}
+\newcommand{\department}       	[1]{\gdef\@department{#1}}
+\newcommand{\school}       		[1]{\gdef\@school{#1}}
+\newcommand{\university}       	[1]{\gdef\@university{#1}}
+\newcommand{\coverfigurefile}  	[1]{\gdef\@coverfigurefile{#1}}
+\newcommand{\duration}       	[1]{\gdef\@duration{#1}}
+\newcommand{\instructions}      [1]{\gdef\@instructions{#1}}
+
+% define basic colors
+\definecolor{fctgreen}{RGB}{117, 192, 68}
+% PANTONE 660C ; C:91 M:53 Y:0 K:0 ; R:0 G:112 B:185
+\definecolor{fctblue}{RGB}{0, 112, 185}
+% PANTONE 631C ; C:70 M:1 Y:12 K:0 ; R:0 G:188 B:218
+\definecolor{fctlightblue}{RGB}{0, 188, 218}
+
+\RequirePackage{lastpage}
+\RequirePackage{fancyhdr}
+\RequirePackage{tikz}
+\RequirePackage{hyperref}
+
+% Course assignment
+\DeclareOption{Assignment}
+{
+		
+	% Page Setup
+	\setlength{\headheight}{16pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+	%\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\hyperlink{toc}{\bfseries\thepage}}
+	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhead{} % get rid of headers
+		\renewcommand{\headrulewidth}{0pt}
+		%\addtolength{\headheight}{0.75cm}
+		%\addtolength{\textheight}{-0.75cm}
+	}
+
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{empty}
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+%				\includegraphics[height=2.5cm]{nova_cor.png}
+%				\hspace*{1cm}
+				\includegraphics[height=4cm]{FCT_1_CMYK.pdf}\\
+				\vspace{1.0cm}
+				\Large \textbf{\@course}\\
+				\vspace{1.0cm}
+			\end{center}
+		\end{minipage}
+	
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{0.7cm}
+				{\LARGE \textbf{\@title}}\\
+				\vspace*{0.5cm}
+				{\Large \textbf{\@subtitle}}\\
+				\vspace*{0.4cm}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{1.5cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\includegraphics[height=4cm]{\@coverfigurefile}
+			\end{center}
+			\vspace{1.5cm}
+		\end{minipage}
+	
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\Large \@department \\
+				\Large \@school \\
+				\Large \@university \\
+				\vspace{1.5cm}
+			\end{center}
+		\end{minipage}
+				
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				{\Large \@author}\\
+				\vspace*{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\large \textbf{\@date}
+			\end{center}
+		\end{minipage}
+	
+		\clearpage
+	}
+}
+
+
+% Course report made by students
+\DeclareOption{StudentReport}
+{
+	
+	% Page Setup
+	\setlength{\headheight}{16pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+	\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\hyperlink{toc}{\bfseries\thepage/\pageref{LastPage}}}
+	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhead{} % get rid of headers
+		\renewcommand{\headrulewidth}{0pt}
+		%\addtolength{\headheight}{0.75cm}
+		%\addtolength{\textheight}{-0.75cm}
+	}
+	
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{empty}
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				%				\includegraphics[height=2.5cm]{nova_cor.png}
+				%				\hspace*{1cm}
+				\includegraphics[height=4cm]{FCT_1_CMYK.pdf}\\
+				\vspace{1.0cm}
+				\Large \textbf{\@course}\\
+				\vspace{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{0.7cm}
+				{\LARGE \textbf{\@title}}\\
+				\vspace*{0.5cm}
+				{\Large \textbf{\@subtitle}}\\
+				\vspace*{0.4cm}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\includegraphics[height=4cm]{\@coverfigurefile}
+			\end{center}
+			\vspace{1.0cm}
+		\end{minipage}
+	
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				{\Large \@author}\\
+				\vspace*{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\Large \@department \\
+				\Large \@school \\
+				\Large \@university \\
+				\vspace{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				{\Large Professor: \@professor}\\
+				\vspace*{1.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\large \textbf{\@date}
+			\end{center}
+		\end{minipage}
+		
+		\clearpage
+	}
+}
+
+
+% Course paper assignment
+\DeclareOption{Paper}
+{
+	% Page Setup
+	\setlength{\headheight}{0pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+	%	\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+	%	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\thepage/\pageref{LastPage}}
+	\fancyfoot[L]{\@author}
+	%	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+	%	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhf{} 
+		\fancyfoot[R]{\thepage/\pageref{LastPage}}
+		\fancyfoot[L]{\@author}
+		\renewcommand{\headrulewidth}{0pt}
+		%		%\addtolength{\headheight}{0.75cm}
+		%		%\addtolength{\textheight}{-0.75cm}
+		\renewcommand{\footrulewidth}{0.5pt}
+%		\addtolength{\headheight}{3cm} % make space for the rule
+%%		\addtolength{\voffset}{-20pt}
+%		\addtolength{\textheight}{-3cm}
+	}
+	
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{plain}
+		
+		\noindent
+		\begin{tabular*}{\textwidth}{@{} l @{\extracolsep{\fill}} r @{\extracolsep{6pt}}}
+			\begin{minipage}[t]{0.8\textwidth}
+				\begin{flushleft}
+					{\Large \textbf{\@title}}\\
+					\vspace*{0.1cm}
+					{\large \@subtitle}\\
+					\vspace*{0.2cm}
+					{\large \@author}\\
+					\vspace*{0.2cm}
+					{\@course}\\
+					\vspace*{0.2cm}
+				\end{flushleft}
+			\end{minipage}
+			&
+			\begin{minipage}[t]{0.2\linewidth}
+				\raisebox{-0.9\height+1.0\baselineskip}{\includegraphics[width=\linewidth]{FCT_1_CMYK.pdf}}\\
+			\end{minipage}
+			\\
+		\end{tabular*}
+		
+		\noindent
+		\rule{\textwidth}{0.4pt}\\
+		
+	}
+}
+
+\DeclareOption{ExerciseBook}
+{
+	
+	% Page Setup
+	\setlength{\headheight}{16pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+	%\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\hyperlink{toc}{\bfseries\thepage/\pageref{LastPage}}}
+	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhead{} % get rid of headers
+		\renewcommand{\headrulewidth}{0pt}
+		%\addtolength{\headheight}{0.75cm}
+		%\addtolength{\textheight}{-0.75cm}
+	}
+	
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{empty}
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				%				\includegraphics[height=2.5cm]{nova_cor.png}
+				%				\hspace*{1cm}
+				\includegraphics[height=4cm]{FCT_1_CMYK.pdf}\\
+				\vspace{2.0cm}
+				\Large \textbf{\@course}\\
+				\vspace{2.5cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{0.7cm}
+				{\LARGE \textbf{\@title}}\\
+				\vspace*{0.5cm}
+				{\Large \textbf{\@subtitle}}\\
+				\vspace*{0.4cm}
+				\rule{\textwidth}{0.4pt}\\
+				\vspace*{2.5cm}
+			\end{center}
+		\end{minipage}
+				
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\Large \@department \\
+				\Large \@school \\
+				\Large \@university \\
+				\vspace{2.5cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				{\Large \@author}\\
+				\vspace*{2.0cm}
+			\end{center}
+		\end{minipage}
+		
+		\noindent
+		\begin{minipage}[c]{\textwidth}
+			\begin{center}
+				\large \textbf{\@date}
+			\end{center}
+		\end{minipage}
+		
+		\clearpage
+	}
+}
+
+% Exercise sheet
+\DeclareOption{Sheet}
+{
+	
+	% Page Setup
+	\setlength{\headheight}{16pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+	\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\hyperlink{toc}{\bfseries\thepage/\pageref{LastPage}}}
+	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhf{} % get rid of headers
+		\renewcommand{\headrulewidth}{0pt}
+		\fancyfoot[R]{\hyperlink{toc}{\bfseries\thepage/\pageref{LastPage}}}
+		\fancyfoot[L]{\nouppercase{\@author}}
+		\renewcommand{\footrulewidth}{0.5pt}
+		\addtolength{\textheight}{-0.5pt}
+	}
+	
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{empty}
+		
+		\noindent
+		\begin{tabular*}{\textwidth}{l @{\extracolsep{\fill}} r @{\extracolsep{6pt}}}
+			\begin{minipage}[b]{0.7\linewidth}
+				\begin{flushleft}
+					{\Large \textbf{\@title}}\\
+					\vspace*{0.4cm}
+					{\large \@course}\\
+					\vspace*{0.3cm}
+					{\@date}\\
+					\vspace*{0.4cm}
+				\end{flushleft}
+			\end{minipage}
+			&
+			\begin{minipage}[b]{0.2\linewidth}
+				\includegraphics[width=\linewidth]{FCT_1_CMYK.pdf}\\
+			\end{minipage}
+			\\
+		\end{tabular*}
+		
+		\noindent
+		\rule{\textwidth}{0.4pt}\\
+		
+	}
+}
+
+
+% Test or Exam
+\DeclareOption{Exam}
+{
+	% Page Setup
+	\setlength{\headheight}{0pt}
+	\hoffset 0cm
+	\voffset 0cm
+	\oddsidemargin 0.71cm
+	\evensidemargin 0.04cm
+	\marginparsep 0cm
+	\topmargin -0.25cm
+	\textwidth 15cm
+	\textheight 23.5cm
+	
+	% Fancy Page Headers
+	\pagestyle{fancy}
+%	\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+%	\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+	\fancyhf{} 
+	\fancyhead[L]{\bfseries\nouppercase{\@title}}
+	\fancyhead[R]{\nouppercase{\@course}}
+	\fancyfoot[R]{\thepage/\pageref{LastPage}}
+	\fancyfoot[L]{\@date}
+%	\fancyfoot[L]{\nouppercase{\@author}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+	\addtolength{\headheight}{0.5pt} % make space for the rule
+	\addtolength{\textheight}{-0.5pt}
+%	
+	% define chapter page fancy headers:
+	\fancypagestyle{plain}{%
+		\fancyhf{} 
+		\fancyfoot[R]{\thepage/\pageref{LastPage}}
+		\fancyfoot[L]{\@date}
+		\renewcommand{\headrulewidth}{0pt}
+%		%\addtolength{\headheight}{0.75cm}
+%		%\addtolength{\textheight}{-0.75cm}
+		\renewcommand{\footrulewidth}{0.5pt}
+	}
+	
+	\renewcommand{\maketitle}
+	{
+		\thispagestyle{empty}
+		
+		\noindent
+		\begin{tabular*}{\textwidth}{@{} l @{\extracolsep{\fill}} r @{\extracolsep{6pt}}}
+			\begin{minipage}[t]{0.8\linewidth}
+				\begin{flushleft}
+					{\Large \textbf{\@title}}\\
+					\vspace*{0.1cm}
+					{\large \@course}\\
+					\vspace*{0.2cm}
+					{Duration: \@duration}\\
+					\vspace*{0.2cm}
+%					\begin{tabular}[t]{l} 
+						{\@instructions} 
+%					\end{tabular}
+					\\
+					\vspace*{0.2cm}
+				\end{flushleft}
+			\end{minipage}
+			&
+			\begin{minipage}[t]{0.2\linewidth}
+				\raisebox{-0.9\height+1.0\baselineskip}{\includegraphics[width=\linewidth]{FCT_1_CMYK.pdf}}\\
+			\end{minipage}
+			\\
+		\end{tabular*}
+		
+		\noindent
+		\rule{\textwidth}{0.4pt}\\
+		
+	}
+}
+
+\ProcessOptions\relax

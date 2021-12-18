@@ -127,7 +127,7 @@ pr_min = -7 ;
 pr_max = 93;
 Y_min1 = kron(pr_min,ones(nu1*(N+1),1));
 Y_max1 = kron(pr_max, ones(nu1*(N+1),1));
-My1 = [-Gb11; Gb11];
+My = [-Gb11; Gb11];
 
 M1 = [Mdu1; Mu1];
 
@@ -220,8 +220,7 @@ for k = 2:nk
     x2k = X2(:,k);
     wu1 = [-U_min1 + M41*u(1,k-1);U_max1 - M41*u(1,k-1)];
     wu2 = [-U_min2 + M42*u(2,k-1);U_max2 - M41*u(2,k-1)];
-    wy1 = [-Y_min1 + Fb1*x1k; Y_max1 - Fb1*x1k];
-    wy2 = [-Y_min2 + Fb2*x2k; Y_max2 - Fb2*x2k];
+    wy1 = [-Y_min1 + Fb1*xk; Y_max - Fb*xk];
     
     U1p = reshape( U1(:,:,k-1) ,[],1);
     U2p = reshape( U2(:,:,k-1) ,[],1);

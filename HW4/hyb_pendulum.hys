@@ -1,0 +1,50 @@
+/* Hybrid model of a pendulum, adapted from
+http://cse.lab.imtlucca.it/~bemporad/mpc_course.html 
+Bruno Guerreiro - FCT/Nova - 2020 */
+SYSTEM hyb_pendulum {
+INTERFACE {
+    PARAMETER {
+        REAL tau_min,tau_max,th_max,om_max;
+        REAL alpha,gamma;
+        REAL Ts,g,m,l,I,beta;
+    }
+    STATE {
+        REAL th [-th_max,th_max];
+        REAL om [-om_max,om_max];
+    }
+    INPUT {
+        REAL u [-tau_max,tau_max];
+    }
+    OUTPUT{
+        REAL y;
+    }
+}
+IMPLEMENTATION {
+    AUX {
+        REAL tauA,s3,s4;
+        BOOL d1,d2,d3,d4;
+    }
+    AD {
+        d1 = u<=tau_min;
+        d2 = u>=-tau_min;
+        d3 = th <= -0.5*pi;
+        d4 = th >= 0.5*pi;
+    }
+    DA {
+        tauA = {IF d1 & d2 THEN u ELSE 0};
+        s3 = {IF d3 THEN -2*alpha*th-gamma ELSE 0};
+        s4 = {IF d4 THEN -2*alpha*th+gamma ELSE 0};
+    }
+    CONTINUOUS {
+        th = th + Ts*om;
+        om = om + Ts/I*( (u-tauA) + m*g*l*(alpha*th+s3+s4) - beta*om);
+    }
+    OUTPUT {
+        y = th;
+    }
+    MUST {
+        d4->~d3;
+        ~d1->d2;
+    }
+}
+}
