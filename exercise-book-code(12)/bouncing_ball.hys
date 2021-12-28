@@ -1,0 +1,22 @@
+SYSTEM bouncing_ball {
+INTERFACE { /* Description of variables and constants */
+    PARAMETER { REAL Ts, g, alpha; /* 0=elastic, 1=anelastic */
+                REAL h_min, h_max, v_max; }
+    STATE { REAL h [h_min-10,h_max+4];
+            REAL v [-v_max,v_max]; }
+}
+IMPLEMENTATION {
+    AUX {   BOOL dh; /* negative height? */
+            REAL zh;
+            REAL zv; }
+    AD {    dh = h <= h_min; }
+    DA {    zh = {   IF dh 
+                        THEN h-Ts*v
+                        ELSE h+Ts*v-Ts*Ts*g};
+            zv = {   IF dh 
+                        THEN -(1-alpha)*v
+                        ELSE v-Ts*g}; }
+    CONTINUOUS {
+            h = zh;
+            v = zv;}
+}}

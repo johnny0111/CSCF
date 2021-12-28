@@ -34,8 +34,8 @@ function [Fb,Gb,Qb,Rb] = GetBatchYNdistMatrices(Ai,Bi,Ci,N,Pi,Qi,Ri,alphai)
             % cost matrices
             if exist('Pi','var') && exist('Qi','var') && exist('Ri','var')
                 if n < N
-                    Qb{i} = alphai*blkdiag(Qb{i},Qi);
-                    Rb{i} = alphai*blkdiag(Rb{i},Ri);
+                    Qb{i} = alphai*blkdiag(Qb{i},Qi(i));
+                    Rb{i} = alphai*blkdiag(Rb{i},Ri(i));
                 else
                     Qb{i} = alphai*blkdiag(Qb{i},Pi);
                 end

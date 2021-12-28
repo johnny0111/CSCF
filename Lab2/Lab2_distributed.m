@@ -40,7 +40,7 @@ A1c = [0 -1;0 -d];
 A2c = [-d 0 0;1 0 -1 ; 0 0 -d];
 B11c = [0 1/m]';
 B12c = [0 0]';
-B21c = [0 0 0]';
+B21c = [1/m 0 0]';
 B22c = [0 0 1/m]';
 C1 = [1 0];
 C2 = [0 1 0];
@@ -182,12 +182,12 @@ U1 = zeros(nu1,N,nk);
 U1_d = zeros(nu1,N,nk);
 dU1 = zeros(nu1,N);
 dU1_d = zeros(nu1,N);
-Xd1(:,1) = xd0(1:2);
+%Xd1(:,1) = xd0(1:2);
 X1(:,1) = x01;
-Y1(:,1) = C1*xd0(1:2);
-Xd1(:,2) = xd0(1:2);
-X1(:,2) = x01;
-Y1(:,2) = C1*xd0(1:2);
+%Y1(:,1) = C1*xd0(1:2);
+%Xd1(:,2) = xd0(1:2);
+%X1(:,2) = x01;
+%Y1(:,2) = C1*xd0(1:2);
 
 %player2
 x02 = [xd0(2:4)*0 ; C2*xd0(2:4)];
@@ -239,7 +239,7 @@ for k = 2:nk
     
     % Get optimal sequence for player 2
     St2 = S21x*x1k - S21y*Yb1 + S22x*x2k - S22y*Yb2 + S21u*U1p ;
-    [U2o,J2o,exitflag,output,lambda] = quadprog(Rt2,St2,M2,wr1);
+    [U2o,J2o,exitflag,output,lambda] = quadprog(Rt2,St2,M2,wr2);
     if exitflag<0
         error('Problems in the Optimization problem (player 2).');
     end
@@ -287,7 +287,7 @@ figure(7102);
 plot(Tref,ref(1,:),'k+-');
 grid on;
 hold on;
-plot(Tref,ref(2,:),'k+--');
+%plot(Tref,ref(2,:),'k+--');
 plot(TX,Xd(1,:),'s-','Color',sstblue);
 plot(TX,Xd(2,:),'d-','Color',sstdarkblue);
 plot(TX,Xd(3,:),'.--','Color',sstlightblue);
