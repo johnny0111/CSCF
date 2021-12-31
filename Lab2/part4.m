@@ -35,6 +35,8 @@ Ts = 0.1;
 d = (rho*area*Cd*ve)/m;
 vl = 0;
 lambda = 0.95;
+V= load('V.mat');
+V = V.V;
 
 % Ac =[0  -1  0   0   0   0   0   0   0   0   0   0   0   0   
 %      0  -d  0   0   0   0   0   0   0   0   0   0   0   0   
@@ -71,7 +73,9 @@ Ac =[0  -1  0   0   0   0   0   0   0   0
      0  0   0   0   0   0   0   -d  0   0   
      0  0   0   0   0   0   0   1   0   -1    
      0  0   0   0   0   0   0   0   0   -d ];
- 
+
+       
+       
  Bd = [1  0  0
        0  -g  -d/2
        0   0  0
@@ -136,10 +140,10 @@ Bc= [  0   0    0   0   0
 %        };
 
 Bijc = {Bc(1:2,1),Bc(1:2,2),Bc(1:2,3),Bc(1:2,4),Bc(1:2,5)
-        Bc(2:4,1),Bc(2:4,2),Bc(2:4,3),Bc(2:4,4),Bc(2:4,5)
-        Bc(4:6,1),Bc(4:6,2),Bc(4:6,3),Bc(4:6,4),Bc(4:6,5)
-        Bc(6:8,1),Bc(6:8,2),Bc(6:8,3),Bc(6:8,4),Bc(6:8,5)
-        Bc(8:10,1),Bc(8:10,2),Bc(8:10,3),Bc(8:10,4),Bc(8:10,5)};
+        Bc(1:4,1),Bc(1:4,2),Bc(1:4,3),Bc(1:4,4),Bc(1:4,5)
+        Bc(1:6,1),Bc(1:6,2),Bc(1:6,3),Bc(1:6,4),Bc(1:6,5)
+        Bc(1:8,1),Bc(1:8,2),Bc(1:8,3),Bc(1:8,4),Bc(1:8,5)
+        Bc(1:10,1),Bc(1:10,2),Bc(1:10,3),Bc(1:10,4),Bc(1:10,5)};
 % C=[ 1  0   0   0   0   0   0   0   0   0   0   0   0   0   
 %     0  0   1   0   0   0   0   0   0   0   0   0   0   0   
 %     0  0   0   0   1   0   0   0   0   0   0   0   0   0   
@@ -162,16 +166,35 @@ C=[ 1  0   0   0   0   0   0   0   0   0
 % Ci={[1 0], [0 1 0],[0 1 0],[0 1 0],[0 1 0],[0 1 0],[0 1 0]};
 % Ci={[1 0], [0 1 0]};
 %  Ci={[1 0], [0 1 0],[0 1 0]};
-Ci={[1 0], [0 1 0],[0 1 0],[0 1 0],[0 1 0],[0 1 0]};
+Ci={[1 0], [0 0 1 0],[0 0 0 0 1 0],[0 0 0 0 0 0 1 0],[0 0 0 0 0 0 0 0 1 0]};
 
  A1c = [0 -1;0 -d];
- A2c = [-d 0 0;1 0 -1;0 0 -d];
+  A2c = [0  -1  0  0
+        0  -d  0  0
+        0  1   0  -1
+        0  0   0  -d];
+ A3c=[0  -1  0   0   0   0
+      0  -d  0   0   0   0
+      0  1   0   -1  0   0
+      0  0   0   -d  0   0
+      0  0   0   1   0   -1
+      0  0   0   0   0   -d];
+
+A4c = [0  -1  0   0   0   0   0   0    
+         0  -d  0   0   0   0   0   0     
+         0  1   0   -1  0   0   0   0      
+         0  0   0   -d  0   0   0   0   
+         0  0   0   1   0   -1  0   0    
+         0  0   0   0   0   -d  0   0     
+         0  0   0   0   0   1   0   -1    
+         0  0   0   0   0   0   0   -d     ];
+A5c = Ac;
  
 % A = eye(6) + Ac*Ts;
 % Ai={eye(2) + A1c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts,...
 %      eye(3) + A2c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts};
 %  Ai={eye(2) + A1c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts};
-Ai={eye(2) + A1c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts, eye(3) + A2c*Ts};
+Ai={eye(2) + A1c*Ts, eye(4) + A2c*Ts, eye(6) + A3c*Ts, eye(8) + A4c*Ts, eye(10) + A5c*Ts};
 A=eye(2*p) + Ac*Ts;
 % Ai={eye(2) + A1c*Ts, eye(3) + A2c*Ts};
 B = Bc*Ts;
@@ -192,6 +215,12 @@ nx2 = size(Bij{2,1},1);
 nu2 = size(Bij{2,1},2);
 ny1 = size(Ci{1},1);
 ny2 = size(Ci{2},1);
+
+for i=1:p
+   nxi{i} =  size(Bij{i,1},1);
+   nui{i} = size(Bij{i,1},2);
+   nyi{i} = size(Ci{i},1);
+end
 % x10 = [1;1];
 % x20 = [1;1;1];
 % x30 = [1;1;1];
@@ -208,25 +237,25 @@ xd0 = ones(2*p,1);
 
 
 %A_ext = [A zeros(nx,ny);C*A eye(ny)];
-Ai_ext{1} = [Ai{1} zeros(nx1,ny1);Ci{1}*Ai{1} eye(ny1)];
-for i=2:p
-   Ai_ext{i} = [Ai{i} zeros(nx2,ny2);Ci{i}*Ai{i} eye(ny2)];
+% Ai_ext{1} = [Ai{1} zeros(nx1,ny1);Ci{1}*Ai{1} eye(ny1)];
+for i=1:p
+   Ai_ext{i} = [Ai{i} zeros(nxi{i},nyi{i});Ci{i}*Ai{i} eye(nyi{i})];
 end
 
-for i=1:p
-   Bij_ext{1,i} = [Bij{1,i};Ci{1}*Bij{1,i}]; 
-end
+% for i=1:p
+%    Bij_ext{1,i} = [Bij{1,i};Ci{1}*Bij{1,i}]; 
+% end
  
-for i=2:p
+for i=1:p
    for j = 1:p
         Bij_ext{i,j} = [Bij{i,j};Ci{i}*Bij{i,1}]; 
    end
 end
  
-Ci_ext{1} = [zeros(ny1,nx1),eye(ny1)];
+% Ci_ext{1} = [zeros(ny1,nx1),eye(ny1)];
 
-for i=2:p
-   Ci_ext{i} = [zeros(ny2,nx2),eye(ny2)]; 
+for i=1:p
+   Ci_ext{i} = [zeros(nyi{i},nxi{i}),eye(nyi{i})]; 
 end
  
  %% Cost
@@ -379,27 +408,27 @@ dist = [zeros(1,nk+N);theta*(Tref>=500);ws*(Tref>=200)];
 
 %player1
 x01 = [xd0(1:2)*0 ; Ci{1}*xd0(1:2)];
-U1 = zeros(nu1,N,nk);
+U1 = zeros(nui{1},N,nk);
 X1(:,1) = x01;
 
 %player2
-x02 = [xd0(2:4)*0 ; Ci{2}*xd0(2:4)];
-U2 = zeros(nu2,N,nk);
+x02 = [xd0(1:4)*0 ; Ci{2}*xd0(1:4)];
+U2 = zeros(nui{2},N,nk);
 X2(:,1) = x02;
 
 %player3
-x03 = [xd0(4:6)*0 ; Ci{3}*xd0(4:6)];
-U3 = zeros(nu2,N,nk);
+x03 = [xd0(1:6)*0 ; Ci{3}*xd0(1:6)];
+U3 = zeros(nui{3},N,nk);
 X3(:,1) = x03;
 
 %player4
-x04 = [xd0(6:8)*0 ; Ci{4}*xd0(6:8)];
-U4 = zeros(nu2,N,nk);
+x04 = [xd0(1:8)*0 ; Ci{4}*xd0(1:8)];
+U4 = zeros(nui{4},N,nk);
 X4(:,1) = x04;
 
 %player5
-x05 = [xd0(8:10)*0 ; Ci{5}*xd0(8:10)];
-U5 = zeros(nu2,N,nk);
+x05 = [xd0(1:10)*0 ; Ci{5}*xd0(1:10)];
+U5 = zeros(nui{5},N,nk);
 X5(:,1) = x05;
 
 % % player6
@@ -429,22 +458,32 @@ X5(:,1) = x05;
 
 Xd(:,1) = xd0;
 Xd(:,2) = xd0;
-pk = eye(10);
+pk = eye(5);
 u = zeros(p,nk);
 Y = zeros(p,nk);
 noise = zeros(p,nk);
 c = 0.8;
 
 for k=1:nk
-    noise(:,k)=[c*rand;c*rand; c*rand; c*rand; c*rand; ]; 
+    noise(:,k)=[c*rand;c*rand; c*rand; c*rand; c*rand ]; 
 end
 
-for k=1:p
-   V(k,1) = var(noise(k,:)); 
-end
-V=0.0000000001*V;
 
+%delay 
+syms s t
+Adel = expm(Ac*(Ts));
+T1 = int(expm(Ac*(t)),0,0.3*Ts);
+T2 = int(expm(Ac*(t)),0,Ts-0.1*Ts);
+Bd1 = expm(Ac*(Ts-0.5))*T1*Bc;
+Bd2 = T2*Bc;
+
+% for k=1:p
+%    V(k,:) = cov(noise(k,:)); 
+% end
+% 
+% 
 % sys = ss(A,B,C,0);
+% [kalmf,L,P] = kalman(sys,V(1),W);
 % sys = setDelayModel(sys,Ts*1.2);
 % [A,B1,B2,C1,C2,D11,D12,D21,D22,E,tau] = getDelayModel(sys);
 for k = 2:nk
@@ -457,24 +496,24 @@ for k = 2:nk
     x1k = X1(:,k);
     
     %Player 2
-    Dxdk2 = Xd(2:4,k)-Xd(2:4,k-1);
-    X2(:,k) = [ Dxdk2; Ci{2}*Xd(2:4,k)];
+    Dxdk2 = Xd(1:4,k)-Xd(1:4,k-1);
+    X2(:,k) = [ Dxdk2; Ci{2}*Xd(1:4,k)];
     x2k = X2(:,k);
     
     %Player 3
-    Dxdk3 = Xd(4:6,k)-Xd(4:6,k-1);
-    X3(:,k) = [ Dxdk3; Ci{3}*Xd(4:6,k)];
+    Dxdk3 = Xd(1:6,k)-Xd(1:6,k-1);
+    X3(:,k) = [ Dxdk3; Ci{3}*Xd(1:6,k)];
     x3k = X3(:,k);
     
     %Player 4
-    Dxdk4 = [Xd(6,k);Xd(7,k);Xd(8,k)]-[Xd(6,k-1);Xd(7,k-1);Xd(8,k-1)];
-    X4(:,k) = [ Dxdk4; Ci{4}*[Xd(6,k);Xd(7,k);Xd(8,k)]];
+     Dxdk4 = Xd(1:8,k)-Xd(1:8,k-1);
+    X4(:,k) = [ Dxdk4; Ci{4}*Xd(1:8,k)];
     x4k = X4(:,k);
     
     %Player 5
-    Dxdk5 = [Xd(8,k);Xd(9,k);Xd(10,k)]-[Xd(8,k-1);Xd(9,k-1);Xd(10,k-1)];
-    X5(:,k) = [ Dxdk5; Ci{5}*[Xd(8,k);Xd(9,k);Xd(10,k)]];
-    x5k = X5(:,k);    
+     Dxdk5 = Xd(1:10,k)-Xd(1:10,k-1);
+    X5(:,k) = [ Dxdk5; Ci{5}*Xd(1:10,k)];
+    x5k = X5(:,k);   
     
 %     %Player 6
 %     Dxdk6 = [Xd(10,k);Xd(11,k);Xd(12,k)]-[Xd(10,k-1);Xd(11,k-1);Xd(12,k-1)];
@@ -548,21 +587,21 @@ for k = 2:nk
     end
     
     % Get optimal sequence for player 3
-    St3 = Sx{3,2}*x2k - Sy{3,2}*Yb + Sx{3,3}*x3k - Sy{3,3}*Yb + Su{3,2}*U2p ;
+    St3 = (Sx{3,2}*x2k - Sy{3,2}*Yb) + (Sx{3,1}*x1k - Sy{3,1}*2*Yb) + Sx{3,3}*x3k - Sy{3,3}*Yb + Su{3,2}*U2p + Su{3,1}*U1p;
     [U3o,J3o,exitflag] = quadprog(Rt{3},St3,Mi,wr3);
     if exitflag<0
         error('Problems in the Optimization problem (player 3).');
     end
     
 %     % Get optimal sequence for player 4
-    St4 = Sx{4,3}*x3k - Sy{4,3}*Yb + Sx{4,4}*x4k - Sy{4,4}*Yb + Su{4,3}*U3p ;
+    St4 = (Sx{4,3}*x3k - Sy{4,3}*Yb) + (Sx{4,2}*x2k - Sy{4,2}*2*Yb) + (Sx{4,1}*x1k - Sy{4,1}*3*Yb) + Sx{4,4}*x4k - Sy{4,4}*Yb + Su{4,3}*U3p + Su{4,2}*U2p+ Su{4,1}*U1p;
     [U4o,J4o,exitflag] = quadprog(Rt{4},St4,Mi,wr4);
     if exitflag<0
         error('Problems in the Optimization problem (player 4).');
     end
     
     % Get optimal sequence for player 5
-    St5 = Sx{5,4}*x4k - Sy{5,4}*Yb + Sx{5,5}*x5k - Sy{5,5}*Yb + Su{5,4}*U4p ;
+    St5 = (Sx{5,4}*x4k - Sy{5,4}*Yb) + (Sx{5,3}*x3k - Sy{5,3}*2*Yb) + (Sx{5,2}*x2k - Sy{5,2}*3*Yb) + (Sx{5,1}*x1k - Sy{5,1}*4*Yb) + Sx{5,5}*x5k - Sy{5,5}*Yb + Su{5,4}*U4p + Su{5,3}*U3p + Su{5,2}*U2p + Su{5,1}*U2p;
     [U5o,J5o,exitflag] = quadprog(Rt{5},St5,Mi,wr5);
     if exitflag<0
         error('Problems in the Optimization problem (player 5).');
@@ -631,11 +670,11 @@ for k = 2:nk
 %         U9pp = w(8)*U9o + (1-w(9))*U9pp;
 %         U10pp = w(10)*U10o + (1-w(10))*U10pp;
     end
-    U1(:,:,k) = reshape( U1pp ,nu1,N);
-    U2(:,:,k) = reshape( U2pp ,nu2,N);
-    U3(:,:,k) = reshape( U3pp ,nu2,N);
-    U4(:,:,k) = reshape( U4pp ,nu2,N);
-    U5(:,:,k) = reshape( U5pp ,nu2,N);
+    U1(:,:,k) = reshape( U1pp ,nui{1},N);
+    U2(:,:,k) = reshape( U2pp ,nui{2},N);
+    U3(:,:,k) = reshape( U3pp ,nui{3},N);
+    U4(:,:,k) = reshape( U4pp ,nui{4},N);
+    U5(:,:,k) = reshape( U5pp ,nui{5},N);
 %     U6(:,:,k) = reshape( U6pp ,nu2,N);
 %     U7(:,:,k) = reshape( U7pp ,nu2,N);
 %     U8(:,:,k) = reshape( U8pp ,nu2,N);
@@ -664,18 +703,19 @@ for k = 2:nk
 %               u9k+u(9,k-1)
 %               u10k+u(10,k-1)
                              ];
-    W = (1/lambda - 1) * pk;
+   
     % simulate system for distributed MPC
-    %Xd(:,k+1) = A*Xd(:,k) + B*u(:,k) + Bd*dist(:,k); %simulate joint system
-    %Xd(:,k+1) = A*Xd(:,k) + B*u(:,k);
-    if k < 5
-        Xd(:,k+1) = A*Xd(:,k) + B*u(:,k);
+%     Xd(:,k+1) = A*Xd(:,k) + B*u(:,k) + Bd*dist(:,k); %simulate joint system
+    Xd(:,k+1) = A*Xd(:,k)  + B*u(:,k);
+    if k < 3
+        Xd(:,k+1) = A*Xd(:,k) + B*u(:,k) ;
     else
-        Xd(:,k+1) = A*Xd(:,k) + B(:,1)*u(1,k) + B(:,2)*u(2,k-1) + B(:,3)*u(3,k-2) + B(:,4)*u(4,k-3)+ B(:,5)*u(5,k-4); %delay
+        Xd(:,k+1) = Adel*Xd(:,k) + Bd1*u(:,k-2) + Bd2*u(:,k-1); %delay
     end
-    Y(:,k+1) = C*Xd(:,k+1) + noise(:,k);
+    Y(:,k) = C*Xd(:,k) ;%+ noise(:,k);
     
-%     %KALMAN FILTER
+%     KALMAN FILTER
+% 
 %     pk = A*pk*A' + W;
 %     KalmanG = pk*C'*(C*pk*C'+V)^-1;
 %     Xd(:,k+1) = Xd(:,k+1) + KalmanG*(Y(:,k+1)-C*Xd(:,k+1));
@@ -704,15 +744,15 @@ figure();
 plot(Tref,ref(1,:),'k+-');
 grid on;
 hold on;
-plot(TX,Y(1,:),'-','Color',sstblue);
+plot(TX,Xd(1,:),'-','Color',sstblue);
 % plot(TX,Xd(2,:),'-','Color',sstgray);
-plot(TX,Y(2,:),'-','Color',sstgreen);
+plot(TX,Xd(3,:),'-','Color',sstgreen);
 % plot(TX,Xd(4,:),'-','Color','magenta');
-plot(TX,Y(3,:),'-','Color','red');
+plot(TX,Xd(5,:),'-','Color','red');
 % % plot(TX,Xd(6,:),'-','Color','cyan');
-plot(TX,Y(4,:),'-','Color','magenta');
+plot(TX,Xd(7,:),'-','Color','magenta');
 % % plot(TX,Xd(8,:),'-','Color','yellow');
-plot(TX,Y(5,:),'-','Color','green');
+plot(TX,Xd(9,:),'-','Color','green');
 % % plot(TX,Xd(10,:),'-','Color','blue');
 % plot(TX,Xd(11,:),'--','Color',sstblue);
 % % plot(TX,Xd(12,:),'--','Color',sstgray);
@@ -722,7 +762,7 @@ plot(TX,Y(5,:),'-','Color','green');
 hold off;
 xlabel('$$t_k$$');
 ylabel('$$x(t_k)$$');
-legend('$$r$$','car1 $$x_1$$ ','car1 $$x_2$$','car2$$x_1$$','car2 $$x_2$$', 'car3 $$x_1$$ ','car3 $$x_2$$','car4$$x_1$$','car4 $$x_2$$', 'car5 $$x_1$$ ','car5 $$x_2$$','car 6$$x_1$$','car6 $$x_2$$', 'car7 $$x_1$$ ','car7 $$x_2$$','car8$$x_1$$','car8 $$x_2$$', 'car9 $$x_1$$ ','car9 $$x_2$$','car10$$x_1$$','car10 $$x_2$$','Location','SouthEast');
+legend('$$r$$','car1 ','car2','car3','car4', 'car5 ','Location','SouthEast');
 title('State evolution');
 
 % figure(7103);
